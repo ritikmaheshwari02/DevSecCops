@@ -1,62 +1,117 @@
-# Simple Node.js "Hello World" App
+Hello\! As requested, I have edited the text to remove all emojis.
 
-This is a basic Node.js application that serves a "Hello from Node App!" message on port 3000. It includes Dockerfiles for containerization.
+Here is the cleaned-up version of the text:
 
-## Prerequisites
+-----
 
-* [Node.js](https://nodejs.org/) (if running locally without Docker)
-* [Docker](https://www.docker.com/)
+# node-app
 
-## Running Locally (Without Docker)
+# Assignment 2 – Multi-Stage Dockerfile (Node.js)
 
-1.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
-2.  **Start the server:**
-    ```bash
-    npm start
-    ```
-3.  Access the application at `http://localhost:3000`.
+## Objective
 
-## Building and Running with Docker
+Build a minimal runtime Docker image for a Node.js application using multi-stage builds.
 
-This project provides two Dockerfiles:
+-----
 
-1.  `dockerfile.singlestage`: A straightforward Dockerfile including build tools.
-2.  `dockerfile.multistage`: A multi-stage Dockerfile that results in a smaller, potentially more secure production image by excluding build dependencies.
+## Project Structure
 
-### Single-Stage Build
+## node-app/ ├── app.js ├── package.json ├── Dockerfile └── README.md
 
-1.  **Build the image:**
-    ```bash
-    docker build -t ms-demo:single -f dockerfile.singlestage .
-    ```
-2.  **Run the container:**
-    ```bash
-    docker run -p 3000:3000 --name single-stage-app -d ms-demo:single
-    ```
-3.  Access the application at `http://localhost:3000`.
+## Step 1: Simple Node.js App
 
-### Multi-Stage Build
+The app starts a basic HTTP server on port 3000 and returns a simple message.
 
-1.  **Build the image:**
-    ```bash
-    docker build -t ms-demo:multi -f dockerfile.multistage .
-    ```
-2.  **Run the container:**
-    ```bash
-    docker run -p 3000:3000 --name multi-stage-app -d ms-demo:multi
-    ```
-3.  Access the application at `http://localhost:3000`.
+app.js
 
-## Security Considerations
+```javascript
+const http = require('http');
+const port = 3000;
+const server = http.createServer((req, res) => {
+  res.end('Hello from Docker Multi-Stage Build!');
+});
+server.listen(port, () => console.log(`Running on port ${port}`));
+```
 
-Security scans (`single_scan.txt` and `multi_scan.txt`) were performed on images built from both Dockerfiles.
+-----
 
-* [cite_start]The **single-stage** build (`ms-demo:single`) resulted in a significantly larger number of vulnerabilities (2330 OS vulnerabilities reported)[cite: 1, 21]. This is often due to the inclusion of build-time dependencies and development tools in the final image.
-* [cite_start]The **multi-stage** build (`ms-demo:multi`) significantly reduced the number of OS vulnerabilities (88 reported)[cite: 1999, 2000]. This demonstrates the security benefit of using multi-stage builds to create leaner production images containing only runtime essentials.
+## Step 2: Multi-Stage Dockerfile
 
-[cite_start]Both scans also identified 2 Node.js package vulnerabilities (brace-expansion and cross-spawn)[cite: 6, 7, 1996, 2027, 2034]. These should be addressed by updating the dependencies if possible.
+This Dockerfile uses two stages:
 
-**Note:** Always scan your container images for vulnerabilities before deploying to production.
+1.  Builder Stage – installs dependencies.
+2.  Runtime Stage – copies only the necessary files to make the image lightweight.
+
+Dockerfile
+
+```dockerfile
+# Stage 1: Build stage
+FROM node:18 AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+
+# Stage 2: Runtime stage
+FROM node:18-slim
+WORKDIR /app
+COPY --from=builder /app .
+EXPOSE 3000
+CMD ["node", "app.js"]
+```
+
+-----
+
+## Step 3: Build and Run Docker Image
+
+### Build Image
+
+`docker build -t multi-stage-node .`
+
+### Run Container
+
+`docker run -d -p 3000:3000 multi-stage-node`
+
+### Test Application
+
+`curl http://localhost:3000`
+
+## Expected Output: `Hello from Docker Multi-Stage Build!`
+
+## Step 4: Compare Image Sizes
+
+| Build Type | Command | Image Size |
+|---|---|---|
+| Single-Stage Build | `docker build -t single .` | Larger (\~1GB) |
+| Multi-Stage Build | `docker build -t multi .` | Smaller (\~200MB) |
+
+Screenshot Required:
+Take a screenshot of `docker images` showing both image sizes.
+
+-----
+
+## Expected Screenshots
+
+  - `docker images` size comparison
+  - Running container output (`curl http://localhost:3000`)
+  - Dockerfile code snippet
+
+-----
+
+## Notes
+
+  - Multi-stage builds reduce final image size by removing unnecessary build files.
+  - `node:18-slim` is used for a smaller runtime environment.
+  - Exposed port 3000 is used to access the application in browser:
+    `http://localhost:3000`
+
+-----
+
+## Conclusion
+
+Using multi-stage builds significantly reduces Docker image size and improves deployment efficiency.
+This project demonstrates how to build, run, and optimize a Node.js Docker container.
+
+-----
+
+I have provided the full text with the requested emoji removal. Do you need any further assistance or changes to this text?
